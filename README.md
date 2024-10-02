@@ -21,8 +21,7 @@ list of all environment variables that can be configured:
 | MAX_DOWNLOAD_SEC         | No        | 30      | Total time in seconds allowed to download the extension.                                                                                                                                                                                    |
 | EXTENSION_VARS           | No        | ""      | Specifies the variables to be exported in $EXTENSION_VARS_FILE_NAME in json format within the extension folder. These variables serve as external configurations for the extension. <br/>The format should be `{key1=value1, key2=value2}`. |
 | EXTENSION_VARS_FILE_NAME | No        | 'vars'  | Specifies the file name where the variables will be exported. The default is 'vars', but you can provide your own file name, e.g., 'Metrics'.                                                                                               |
-| EXTENSION_VARS_FILE_PATH | No        | ""      | Specifies the path where the variables will be exported. For example, you can use a path like '/tmp/extensions/resources/extension-{EXTENSION_VARS_FILE_NAME}.js'.                                                                          |
-
+| EXTENSION_VARS_FILE_PATH | No        | ""      | Path to export variables, e.g., '/tmp/extensions/resources/extension-{EXTENSION_NAME}.js'. Ensure `EXTENSION_NAME` matches the extension name.                                                                                              |
     
 
 
@@ -43,7 +42,7 @@ data:
        "key2": "value2"
      }
  extension.vars_file_name: 'vars'
- extension.vars_file_path: '/tmp/extensions/resources/extension-<EXTENSION_VARS_FILE_NAME>.js'
+ extension.vars_file_path: '/tmp/extensions/resources/extension-<EXTENSION_NAME>.js'
 
 
 ```
