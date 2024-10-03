@@ -67,7 +67,7 @@ install_extension() {
 
     if [ -n "$vars" ] && [ "$vars" != "null" ]; then
      echo "Installing extension vars"
-      json_vars=$(printf '%s\n' "$vars" | jq -R . | jq -s .)
+      json_vars=$(printf '%s\n' "$vars" | jq .)
       echo "Exporting extension vars  to path $ext_vars_file_path/$ext_vars_file_name.json"
       echo "$json_vars" > "$ext_vars_file_path/$ext_vars_file_name.json"
     fi
