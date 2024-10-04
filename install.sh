@@ -2,32 +2,6 @@
 
 set -euox pipefail
 
-# will return the current system uptime in milliseconds
-uptime_ms() {
-    # this is necessary to be able to return a value with milliseconds
-    # precision as busybox 'date' command does not support %N format
-    read up rest </proc/uptime
-    echo $(( 10 * (${up%.*}${up#*.}) ))
-}
-
-start_time=$(uptime_ms)
-
-finalizer() {
-    local dl="${download_dir:-}"
-    if [ -d "$dl" ]; then
-      rm -rf $dl
-    fi
-    code=$?
-    if [ $code -ne 0 ]; then
-        echo "ERROR: failed to install $ext_name extension: error code: $code"
-    fi
-    end_time=$(uptime_ms)
-    elapsed=$(( end_time-start_time ))
-    echo "Elapsed Time: $elapsed ms"
-    exit 0
-}
-trap finalizer EXIT
-
 
 # will download the extension respecting the max download
 # duration setting
@@ -65,16 +39,24 @@ install_extension() {
     fi
     cp -Rf resources/* /tmp/extensions/resources/
 
-    if [ -n "$vars" ] && [ "$vars" != "null" ]; then
-     echo "Installing extension vars"
-      json_vars=$(printf '%s\n' "$vars" | jq .)
-      echo "Exporting extension vars  to path $ext_vars_file_path/$ext_vars_file_name.json"
-      echo "$json_vars" > "$ext_vars_file_path/$ext_vars_file_name.json"
+    if [ -n "$ext_vars" ] && [ -n "$ext_name" ]; then
+        create_extension_js_file_with_vars
     fi
+
     echo "UI extension installed successfully"
 
 }
 
+create_extension_js_file_with_vars() {
+  echo "Generating extension vars js file..."
+  ext_js_file_path="/tmp/extensions/resources/extension-$ext_name.js"
+  ext_js_file_name="vars-$(date +"%Y%m%d%H%M%S")"
+  js_file_path="${ext_js_file_path}/extension-${ext_js_file_name}.js"
+  js_code=$(echo "$ext_vars" | jq -r 'to_entries | map("\"" + .key + "\": \"" + .value + "\"") | join(", ")')
+  js_code="((window) => {\n  const vars = {\n    $js_code\n  };\n  window.ARGOCD_EXT_VARS = vars;\n})(window);"
+  echo "Exporting extension vars file at $js_file_path"
+  echo "$js_code" > "$js_file_path"
+}
 
 ## Script
 ext_enabled="${EXTENSION_ENABLED:-true}"
@@ -101,10 +83,10 @@ if [ -f $ext_file ]; then
     rm $ext_file
 fi
 
-vars=$(echo "$EXTENSION_VARS" | jq -c '.')
-ext_vars_file_name="${EXTENSION_VARS_FILE_NAME:-}"
-ext_vars_file_path="${EXTENSION_VARS_FILE_PATH:-}"
+ext_vars=$(echo "$EXTENSION_EXT_JS_VARS" | jq -c '.')
+ext_js_file_path="${EXTENSION_EXT_JS_FILE_PATH:-}"
 
 
 download_extension
 install_extension
+
